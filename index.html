@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriViet Pro - Công cụ Tính Tự Động & Xây dựng Thực đơn Hằng ngày</title>
+    <meta name="description" content="Công cụ tính tự động BMR, TDEE, BMI, ước lượng khẩu phần bằng tay và xây dựng thực đơn gia đình thuần Việt cho 1-10 người.">
+    <meta property="og:title" content="NutriViet Pro - Chuẩn Dinh Dưỡng Việt">
+    <meta property="og:description" content="Tính tự động chỉ số cơ thể, ước lượng khẩu phần bằng tay và lập thực đơn cơm nhà thuần Việt.">
+    <meta name="theme-color" content="#059669">
+
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23059669'/%3E%3Cpath d='M32 10C23.5 10 17 16.2 17 23.8C17 28.2 19.5 32 23.2 34C25.2 24.5 32.5 17.5 42.5 15.2C39.8 12 36.2 10 32 10Z' fill='%23A7F3D0'/%3E%3Cpath d='M13 35C13 45.4934 21.5066 54 32 54C42.4934 54 51 45.4934 51 35H13Z' fill='%23FFFFFF'/%3E%3C/svg%3E">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        :root {
+            --page-bg: linear-gradient(135deg, #d1fae5 0%, #e0f2fe 50%, #fef3c7 100%);
+            --card-bg: #f4fbf7;
+            --card-sub: #e6f7ed;
+            --card-border: #a7f3d0;
+            --input-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --header-bg: rgba(240, 253, 244, 0.92);
+        }
+
+        body[data-theme="warm"] {
+            --page-bg: linear-gradient(135deg, #fef3c7 0%, #ffedd5 50%, #dcfce7 100%);
+            --card-bg: #fffdf5;
+            --card-sub: #fef3c7;
+            --card-border: #fcd34d;
+            --input-bg: #ffffff;
+            --text-primary: #1c1917;
+            --text-secondary: #44403c;
+            --header-bg: rgba(255, 251, 235, 0.92);
+        }
+
+        body[data-theme="slate"] {
+            --page-bg: linear-gradient(135deg, #cbd5e1 0%, #bae6fd 50%, #d1fae5 100%);
+            --card-bg: #f1f5f9;
+            --card-sub: #e2e8f0;
+            --card-border: #94a3b8;
+            --input-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --header-bg: rgba(241, 245, 249, 0.92);
+        }
+
+        html, body {
+            font-family: 'Inter', sans-serif;
+            background: var(--page-bg);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+
+        .nv-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
+        }
+
+        .nv-subpanel {
+            background-color: var(--card-sub);
+            border: 1px solid var(--card-border);
+        }
+
+        .nv-input {
+            background-color: var(--input-bg);
+            border: 1.5px solid #6ee7b7;
+            color: #0f172a;
+        }
+
+        .nv-input:focus {
+            outline: none;
+            border-color: #059669;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            height: 10px;
+            border-radius: 9999px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 22px;
+            width: 22px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 3px solid currentColor;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            margin-top: -6px;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: #ffffff !important; }
+            .nv-card { box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
+        }
+    </style>
+</head>
+<body data-theme="botanical" class="min-h-screen pb-16 antialiased">
+
+    <header style="background: var(--header-bg);" class="sticky top-0 z-30 backdrop-blur-md border-b border-emerald-300/80 shadow-sm no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2">
+            <!-- Brand Identity -->
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center shadow-md shrink-0">
+                    <svg class="w-7 h-7" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M32 10C23.5 10 17 16.2 17 23.8C17 28.2 19.5 32 23.2 34C25.2 24.5 32.5 17.5 42.5 15.2C39.8 12 36.2 10 32 10Z" fill="#A7F3D0"/>
+                        <path d="M46 14C36.8 16.5 30 23.2 28.2 34H39.5C45.2 31.8 49.5 26.2 49.5 19.6C49.5 17.6 48.8 15.6 47.8 14H46Z" fill="#FFFFFF"/>
+                        <path d="M13 35C13 45.4934 21.5066 54 32 54C42.4934 54 51 45.4934 51 35H13Z" fill="#FFFFFF"/>
+                        <path d="M32 46.5C29.8 44.6 26.5 42.2 26.5 39.5C26.5 37.6 28 36.2 29.8 36.2C30.9 36.2 32 36.8 32.5 37.7C33 36.8 34.1 36.2 35.2 36.2C37 36.2 38.5 37.6 38.5 39.5C38.5 42.2 35.2 44.6 33 46.5L32.5 47L32 46.5Z" fill="#F43F5E"/>
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 truncate">NutriViet <span class="text-emerald-700">Pro</span></h1>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-700 text-white">
+                            <i class="fa-solid fa-certificate text-amber-300 text-[10px]"></i> Chuẩn Dinh Dưỡng Việt
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-600 hidden sm:block truncate font-medium">Công cụ Tính Tự Động & Xây dựng Thực đơn Hằng ngày</p>
+                </div>
+            </div>
+
+            <!-- Theme & Quick Links -->
+            <div class="flex items-center gap-2 shrink-0">
+                <div class="flex items-center bg-emerald-900/10 p-1 rounded-xl border border-emerald-600/20">
+                    <button type="button" onclick="setAppTheme('botanical')" id="theme-btn-botanical" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-700 text-white shadow-sm transition">
+                        🌿 Thảo mộc
+                    </button>
+                    <button type="button" onclick="setAppTheme('warm')" id="theme-btn-warm" class="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-700 hover:bg-amber-200/60 transition">
+                        🌾 Kem ấm
+                    </button>
+                    <button type="button" onclick="setAppTheme('slate')" id="theme-btn-slate" class="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-700 hover:bg-sky-200/60 transition">
+                        💎 Xanh lam
+                    </button>
+                </div>
+
+                <a href="#section-calculator" class="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-emerald-200/60 transition">
+                    <i class="fa-solid fa-wand-magic-sparkles text-emerald-700"></i> Tính tự động
+                </a>
+                <a href="#section-hand-guide" class="hidden lg:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-emerald-200/60 transition">
+                    <i class="fa-solid fa-hand text-amber-600"></i> Ước lượng bằng tay
+                </a>
+                <a href="#section-meal-planner" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm transition">
+                    <i class="fa-solid fa-bowl-rice text-amber-300"></i>
+                    <span>Thực đơn (<span id="nav-meal-cal">0</span> kcal)</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-6 space-y-8">
+
+        <!-- Hero Banner -->
+        <div class="rounded-3xl bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 text-white p-5 sm:p-7 shadow-lg border border-emerald-500/30 no-print">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+                <div class="space-y-2 max-w-2xl">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/50 text-emerald-200 text-xs font-semibold border border-emerald-400/30">
+                        <span class="w-2 h-2 rounded-full bg-amber-300"></span>
+                        <span>Hệ thống Cân bằng Dinh dưỡng & Thực đơn Gia đình Việt</span>
+                    </div>
+                    <h2 class="text-xl sm:text-2xl lg:text-3xl font-extrabold leading-tight">
+                        Chăm sóc sức khỏe chủ động với <span class="text-amber-300">bữa cơm thuần Việt</span>
+                    </h2>
+                    <p class="text-xs sm:text-sm text-emerald-100 leading-relaxed">
+                        Tính tự động chỉ số cơ thể chuẩn người châu Á, ước lượng khẩu phần bằng tay dễ hiểu không cần cân tiểu ly và gợi ý thực đơn đi chợ cho 1–10 người.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2.5 sm:gap-3 shrink-0">
+                    <a href="#section-calculator" class="bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl p-3 text-center transition">
+                        <div class="text-amber-300 text-lg mb-1"><i class="fa-solid fa-bolt"></i></div>
+                        <div class="text-xs font-bold">Tính tự động</div>
+                        <div class="text-[10px] text-emerald-200">BMR • TDEE • BMI</div>
+                    </a>
+                    <a href="#section-hand-guide" class="bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl p-3 text-center transition">
+                        <div class="text-rose-300 text-lg mb-1"><i class="fa-solid fa-hand-holding-heart"></i></div>
+                        <div class="text-xs font-bold">Ước lượng tay</div>
+                        <div class="text-[10px] text-emerald-200">Không cần cân</div>
+                    </a>
+                    <a href="#section-meal-planner" class="bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl p-3 text-center transition">
+                        <div class="text-emerald-300 text-lg mb-1"><i class="fa-solid fa-utensils"></i></div>
+                        <div class="text-xs font-bold">Thực đơn Việt</div>
+                        <div class="text-[10px] text-emerald-200">Đi chợ 1-10 người</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <section id="section-calculator" class="scroll-mt-24">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+                <!-- Left Panel: Inputs -->
+                <div class="lg:col-span-7 nv-card rounded-3xl p-5 sm:p-7 space-y-6 border-t-4 border-t-emerald-600">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-200 pb-4">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-xl bg-emerald-700 text-white font-bold flex items-center justify-center text-sm">1</span>
+                            <h2 class="text-lg sm:text-xl font-extrabold text-slate-900">Tính tự động chỉ số cơ thể & Mục tiêu</h2>
+                        </div>
+                        <span class="text-xs font-bold text-emerald-900 bg-emerald-200/80 px-3 py-1 rounded-full">Chuẩn Mifflin-St Jeor</span>
+                    </div>
+
+                    <!-- Gender, Age, Height, Weight -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-2">Giới tính sinh học</label>
+                            <div class="grid grid-cols-2 gap-2.5">
+                                <button type="button" id="btn-gender-male" onclick="setGender('male')" class="py-3 px-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 border-2 border-emerald-600 bg-emerald-600 text-white shadow-sm transition">
+                                    <i class="fa-solid fa-mars"></i> Nam giới
+                                </button>
+                                <button type="button" id="btn-gender-female" onclick="setGender('female')" class="py-3 px-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 border-2 border-emerald-300 bg-white text-slate-700 hover:bg-emerald-50 transition">
+                                    <i class="fa-solid fa-venus"></i> Nữ giới
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="input-age" class="block text-xs font-bold text-slate-700 uppercase mb-2">Độ tuổi (Năm)</label>
+                            <div class="relative">
+                                <input type="number" id="input-age" value="28" min="10" max="100" oninput="handleMetricChange()" class="nv-input w-full rounded-2xl px-4 py-3 font-extrabold text-slate-900 text-base">
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">tuổi</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="input-height" class="block text-xs font-bold text-slate-700 uppercase mb-2">Chiều cao (cm)</label>
+                            <div class="relative">
+                                <input type="number" id="input-height" value="170" min="100" max="230" oninput="handleMetricChange()" class="nv-input w-full rounded-2xl px-4 py-3 font-extrabold text-slate-900 text-base">
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">cm</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="input-weight" class="block text-xs font-bold text-slate-700 uppercase mb-2">Cân nặng (kg)</label>
+                            <div class="relative">
+                                <input type="number" id="input-weight" value="65" min="25" max="200" step="0.5" oninput="handleMetricChange()" class="nv-input w-full rounded-2xl px-4 py-3 font-extrabold text-slate-900 text-base">
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">kg</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BMI Instant Status Bar -->
+                    <div class="nv-subpanel rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-extrabold text-sm shrink-0" id="bmi-value">22.5</div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold text-slate-700">Chỉ số BMI (Châu Á):</span>
+                                    <span id="bmi-badge" class="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-600 text-white">Bình thường</span>
+                                </div>
+                                <p id="bmi-IdealText" class="text-xs text-slate-700 mt-0.5 font-medium">Cân nặng lý tưởng của bạn: 53.5 kg – 66.2 kg</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Level & Goal -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="select-activity" class="block text-xs font-bold text-slate-700 uppercase mb-2">Mức độ vận động</label>
+                            <select id="select-activity" onchange="handleMetricChange()" class="nv-input w-full rounded-2xl px-3.5 py-3 font-bold text-sm text-slate-900">
+                                <option value="1.2">Ít vận động (Làm văn phòng)</option>
+                                <option value="1.375">Vận động nhẹ (Tập 1-3 buổi/tuần)</option>
+                                <option value="1.55" selected>Vận động vừa (Tập 3-5 buổi/tuần)</option>
+                                <option value="1.725">Năng động (Tập 6-7 buổi/tuần)</option>
+                                <option value="1.9">Rất nặng (Vận động viên / Lao động nặng)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="select-goal" class="block text-xs font-bold text-slate-700 uppercase mb-2">Mục tiêu cân nặng</label>
+                            <select id="select-goal" onchange="handleMetricChange()" class="nv-input w-full rounded-2xl px-3.5 py-3 font-bold text-sm text-slate-900">
+                                <option value="-500">Giảm cân nhanh (-500 kcal/ngày)</option>
+                                <option value="-300">Giảm mỡ bền vững (-300 kcal/ngày)</option>
+                                <option value="0" selected>Giữ cân & Sức khỏe (0 kcal)</option>
+                                <option value="300">Tăng cơ nạc (+300 kcal/ngày)</option>
+                                <option value="500">Tăng cân nhanh (+500 kcal/ngày)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-emerald-200 space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                                <h3 class="text-sm font-extrabold text-slate-900 uppercase">Tỷ lệ dinh dưỡng tự động (Tinh bột / Đạm / Béo)</h3>
+                                <p class="text-xs text-slate-600">Chọn chế độ mẫu hoặc kéo thanh trượt (tổng luôn tự động bằng 100%)</p>
+                            </div>
+                        </div>
+
+                        <!-- Preset Diet Buttons -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <button type="button" onclick="applyPreset('balanced')" id="preset-balanced" class="py-2.5 px-3 rounded-xl text-xs font-bold border-2 border-emerald-600 bg-emerald-600 text-white shadow-sm transition">
+                                🍚 Cân bằng (50/25/25)
+                            </button>
+                            <button type="button" onclick="applyPreset('highprotein')" id="preset-highprotein" class="py-2.5 px-3 rounded-xl text-xs font-bold border border-emerald-300 bg-white text-slate-800 hover:bg-emerald-50 transition">
+                                💪 Giàu Đạm (40/35/25)
+                            </button>
+                            <button type="button" onclick="applyPreset('lowcarb')" id="preset-lowcarb" class="py-2.5 px-3 rounded-xl text-xs font-bold border border-emerald-300 bg-white text-slate-800 hover:bg-emerald-50 transition">
+                                🥗 Giảm Tinh Bột (25/40/35)
+                            </button>
+                            <button type="button" onclick="applyPreset('keto')" id="preset-keto" class="py-2.5 px-3 rounded-xl text-xs font-bold border border-emerald-300 bg-white text-slate-800 hover:bg-emerald-50 transition">
+                                🥑 Keto (10/25/65)
+                            </button>
+                        </div>
+
+                        <!-- 3 Sliders -->
+                        <div class="space-y-3 pt-1">
+                            <!-- Carbs Slider -->
+                            <div class="bg-amber-100/70 p-3.5 rounded-2xl border border-amber-300">
+                                <div class="flex justify-between items-center text-xs font-bold mb-1.5">
+                                    <span class="text-amber-900 flex items-center gap-1.5"><i class="fa-solid fa-bowl-rice text-amber-600"></i> Tinh bột (Carbs - 4 kcal/g)</span>
+                                    <span class="text-amber-950 font-extrabold"><span id="label-carb-pct">50</span>% • <span id="label-carb-g">295</span>g</span>
+                                </div>
+                                <input type="range" id="slider-carb" min="5" max="80" value="50" oninput="adjustMacros('carb', this.value)" class="w-full text-amber-600 bg-amber-300 rounded-lg">
+                            </div>
+
+                            <!-- Protein Slider -->
+                            <div class="bg-rose-100/70 p-3.5 rounded-2xl border border-rose-300">
+                                <div class="flex justify-between items-center text-xs font-bold mb-1.5">
+                                    <span class="text-rose-900 flex items-center gap-1.5"><i class="fa-solid fa-drumstick-bite text-rose-600"></i> Chất đạm (Protein - 4 kcal/g)</span>
+                                    <span class="text-rose-950 font-extrabold"><span id="label-pro-pct">25</span>% • <span id="label-pro-g">147</span>g</span>
+                                </div>
+                                <input type="range" id="slider-pro" min="10" max="70" value="25" oninput="adjustMacros('pro', this.value)" class="w-full text-rose-600 bg-rose-300 rounded-lg">
+                            </div>
+
+                            <!-- Fat Slider -->
+                            <div class="bg-indigo-100/70 p-3.5 rounded-2xl border border-indigo-300">
+                                <div class="flex justify-between items-center text-xs font-bold mb-1.5">
+                                    <span class="text-indigo-900 flex items-center gap-1.5"><i class="fa-solid fa-droplet text-indigo-600"></i> Chất béo (Fat - 9 kcal/g)</span>
+                                    <span class="text-indigo-950 font-extrabold"><span id="label-fat-pct">25</span>% • <span id="label-fat-g">65</span>g</span>
+                                </div>
+                                <input type="range" id="slider-fat" min="10" max="80" value="25" oninput="adjustMacros('fat', this.value)" class="w-full text-indigo-600 bg-indigo-300 rounded-lg">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-5 nv-card rounded-3xl p-5 sm:p-7 space-y-6 border-t-4 border-t-teal-600 lg:sticky lg:top-24">
+                    <div class="flex items-center justify-between border-b border-emerald-200 pb-4">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-teal-700 text-white flex items-center justify-center">
+                                <i class="fa-solid fa-chart-pie"></i>
+                            </div>
+                            <h2 class="text-lg font-extrabold text-slate-900">Kết quả Tính tự động hằng ngày</h2>
+                        </div>
+                        <span id="goal-status-badge" class="text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-700 text-white">Giữ cân</span>
+                    </div>
+
+                    <!-- KPI Cards: BMR, TDEE, Water -->
+                    <div class="grid grid-cols-3 gap-2.5">
+                        <div class="bg-emerald-100/90 p-3 rounded-2xl border border-emerald-300 text-center">
+                            <div class="text-[11px] font-extrabold text-emerald-900 uppercase">BMR Cơ bản</div>
+                            <div class="text-lg font-extrabold text-slate-900 mt-0.5" id="res-bmr">1,580</div>
+                            <div class="text-[10px] font-semibold text-slate-600">kcal/ngày</div>
+                        </div>
+                        <div class="bg-amber-100/90 p-3 rounded-2xl border border-amber-300 text-center">
+                            <div class="text-[11px] font-extrabold text-amber-900 uppercase">TDEE Tiêu hao</div>
+                            <div class="text-lg font-extrabold text-slate-900 mt-0.5" id="res-tdee">2,449</div>
+                            <div class="text-[10px] font-semibold text-slate-600">kcal/ngày</div>
+                        </div>
+                        <div class="bg-sky-100/90 p-3 rounded-2xl border border-sky-300 text-center">
+                            <div class="text-[11px] font-extrabold text-sky-900 uppercase">Nước uống</div>
+                            <div class="text-lg font-extrabold text-sky-900 mt-0.5" id="res-water">2,275</div>
+                            <div class="text-[10px] font-semibold text-sky-800">ml/ngày</div>
+                        </div>
+                    </div>
+
+                    <!-- SVG Donut Chart -->
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-6 py-2">
+                        <div class="relative w-44 h-44 shrink-0">
+                            <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                <circle cx="18" cy="18" r="15.9155" fill="transparent" stroke="#e2e8f0" stroke-width="3.8"></circle>
+                                <circle id="donut-carb" cx="18" cy="18" r="15.9155" fill="transparent" stroke="#f59e0b" stroke-width="3.8" stroke-dasharray="50 50" stroke-dashoffset="0"></circle>
+                                <circle id="donut-pro" cx="18" cy="18" r="15.9155" fill="transparent" stroke="#f43f5e" stroke-width="3.8" stroke-dasharray="25 75" stroke-dashoffset="-50"></circle>
+                                <circle id="donut-fat" cx="18" cy="18" r="15.9155" fill="transparent" stroke="#6366f1" stroke-width="3.8" stroke-dasharray="25 75" stroke-dashoffset="-75"></circle>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                                <span class="text-[10px] font-bold uppercase text-slate-500">Mục tiêu</span>
+                                <span id="res-target-cal" class="text-2xl font-extrabold text-slate-900">2,449</span>
+                                <span class="text-xs font-bold text-emerald-700">kcal / ngày</span>
+                            </div>
+                        </div>
+
+                        <!-- Macro Breakdown Cards -->
+                        <div class="w-full space-y-2.5">
+                            <div class="flex items-center justify-between p-2.5 rounded-xl bg-amber-100/80 border border-amber-300">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                                    <span class="text-xs font-bold text-slate-900">Tinh bột</span>
+                                </div>
+                                <div class="text-right">
+                                    <span id="card-carb-g" class="text-sm font-extrabold text-slate-900">306g</span>
+                                    <span id="card-carb-kcal" class="text-[11px] font-semibold text-slate-600 block">1,225 kcal</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between p-2.5 rounded-xl bg-rose-100/80 border border-rose-300">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+                                    <span class="text-xs font-bold text-slate-900">Chất đạm</span>
+                                </div>
+                                <div class="text-right">
+                                    <span id="card-pro-g" class="text-sm font-extrabold text-slate-900">153g</span>
+                                    <span id="card-pro-kcal" class="text-[11px] font-semibold text-slate-600 block">612 kcal</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between p-2.5 rounded-xl bg-indigo-100/80 border border-indigo-300">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-indigo-500"></span>
+                                    <span class="text-xs font-bold text-slate-900">Chất béo</span>
+                                </div>
+                                <div class="text-right">
+                                    <span id="card-fat-g" class="text-sm font-extrabold text-slate-900">68g</span>
+                                    <span id="card-fat-kcal" class="text-[11px] font-semibold text-slate-600 block">612 kcal</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fiber & Action Button -->
+                    <div class="nv-subpanel p-3.5 rounded-2xl flex items-center justify-between text-xs font-bold text-slate-800">
+                        <span>🥬 Chất xơ khuyến nghị mỗi ngày:</span>
+                        <span id="res-fiber" class="text-emerald-800 font-extrabold text-sm">28 - 34g</span>
+                    </div>
+
+                    <button type="button" onclick="autoGenerateMenu()" class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-extrabold text-sm shadow-md flex items-center justify-center gap-2 transition">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i>
+                        <span>Tạo Thực Đơn Mẫu Khớp Mục Tiêu Này</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-hand-guide" class="nv-card rounded-3xl p-5 sm:p-8 border-t-4 border-t-amber-500 scroll-mt-24">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-emerald-200 pb-5 mb-6">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-xl bg-amber-500 text-white font-bold flex items-center justify-center text-sm shrink-0">2</span>
+                    <div>
+                        <h2 class="text-lg sm:text-xl font-extrabold text-slate-900">Ước lượng khẩu phần bằng tay (Không cần cân tiểu ly)</h2>
+                        <p class="text-xs sm:text-sm text-slate-600">Quy đổi trực quan lượng thức ăn mỗi bữa theo kích thước bàn tay của chính bạn</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 bg-amber-100/80 p-1.5 rounded-2xl border border-amber-300 self-start sm:self-auto">
+                    <span class="text-xs font-bold text-amber-950 px-2">Chia thành:</span>
+                    <button type="button" onclick="setMealsPerDay(3)" id="btn-meals-3" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-amber-600 text-white shadow-sm">3 bữa/ngày</button>
+                    <button type="button" onclick="setMealsPerDay(4)" id="btn-meals-4" class="px-3 py-1.5 rounded-xl text-xs font-bold text-amber-950 hover:bg-amber-200">4 bữa/ngày</button>
+                    <button type="button" onclick="setMealsPerDay(5)" id="btn-meals-5" class="px-3 py-1.5 rounded-xl text-xs font-bold text-amber-950 hover:bg-amber-200">5 bữa/ngày</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Palm: Protein -->
+                <div class="bg-rose-100/70 border border-rose-300 rounded-2xl p-4 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-xs font-extrabold">Chất Đạm (Protein)</span>
+                            <span class="text-2xl">✋</span>
+                        </div>
+                        <h3 class="font-extrabold text-slate-900 text-base">Lòng bàn tay</h3>
+                        <p class="text-xs text-slate-700 mt-1">1 lòng bàn tay thịt/cá/đậu hũ chín (không tính ngón tay) ≈ <strong>100g thực phẩm</strong> (~24g đạm).</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-rose-300/80 flex items-baseline justify-between">
+                        <span class="text-xs font-bold text-rose-950">Khẩu phần mỗi bữa:</span>
+                        <span id="hand-pro-meal" class="text-base font-extrabold text-rose-700">2.1 lòng bàn tay</span>
+                    </div>
+                </div>
+
+                <!-- Cupped Hand: Carbs -->
+                <div class="bg-amber-100/70 border border-amber-300 rounded-2xl p-4 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-600 text-white text-xs font-extrabold">Tinh Bột (Carbs)</span>
+                            <span class="text-2xl">🤲</span>
+                        </div>
+                        <h3 class="font-extrabold text-slate-900 text-base">Vốc tay khum</h3>
+                        <p class="text-xs text-slate-700 mt-1">1 vốc tay cơm, bún, phở, khoai lang hoặc xôi đậu xanh ≈ <strong>1/2 chén vừa</strong> (~25g tinh bột).</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-amber-300/80 flex items-baseline justify-between">
+                        <span class="text-xs font-bold text-amber-950">Khẩu phần mỗi bữa:</span>
+                        <span id="hand-carb-meal" class="text-base font-extrabold text-amber-800">4.0 vốc tay</span>
+                    </div>
+                </div>
+
+                <!-- Fist: Veggies -->
+                <div class="bg-emerald-100/70 border border-emerald-300 rounded-2xl p-4 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-700 text-white text-xs font-extrabold">Rau Củ & Chất Xơ</span>
+                            <span class="text-2xl">✊</span>
+                        </div>
+                        <h3 class="font-extrabold text-slate-900 text-base">Nắm tay</h3>
+                        <p class="text-xs text-slate-700 mt-1">1 nắm tay rau luộc, canh rau hoặc củ quả tươi ≈ <strong>100g rau xanh</strong> giàu vitamin & khoáng chất.</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-emerald-300/80 flex items-baseline justify-between">
+                        <span class="text-xs font-bold text-emerald-950">Khẩu phần mỗi bữa:</span>
+                        <span id="hand-veg-meal" class="text-base font-extrabold text-emerald-800">1.5 nắm tay</span>
+                    </div>
+                </div>
+
+                <!-- Thumb: Fats -->
+                <div class="bg-indigo-100/70 border border-indigo-300 rounded-2xl p-4 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">Chất Béo Tốt</span>
+                            <span class="text-2xl">👍</span>
+                        </div>
+                        <h3 class="font-extrabold text-slate-900 text-base">Đốt ngón cái</h3>
+                        <p class="text-xs text-slate-700 mt-1">1 ngón tay cái dầu ăn, mỡ cá, bơ sáp hoặc lạc (đậu phộng) ≈ <strong>1 muỗng cà phê</strong> (~10g chất béo).</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-indigo-300/80 flex items-baseline justify-between">
+                        <span class="text-xs font-bold text-indigo-950">Khẩu phần mỗi bữa:</span>
+                        <span id="hand-fat-meal" class="text-base font-extrabold text-indigo-800">2.2 ngón cái</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-meal-planner" class="scroll-mt-24 space-y-6">
+
+            <!-- Meal Planner Top Control & Family Multiplier -->
+            <div class="nv-card rounded-3xl p-5 sm:p-8 border-t-4 border-t-emerald-700">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-emerald-200">
+                    <div class="flex items-start gap-3">
+                        <span class="w-8 h-8 rounded-xl bg-emerald-700 text-white font-bold flex items-center justify-center text-sm shrink-0 mt-0.5">3</span>
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">Xây Dựng Thực Đơn & Nhân Khẩu Phần Gia Đình</h2>
+                            <p class="text-xs sm:text-sm text-slate-600 mt-1">Chọn món ăn thuần Việt vào từng bữa và tự động nhân định lượng đi chợ cho 1 đến 10 người.</p>
+                        </div>
+                    </div>
+
+                    <!-- Family People Counter + Actions -->
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div class="nv-subpanel px-3.5 py-2 rounded-2xl flex items-center gap-3">
+                            <span class="text-xs font-extrabold text-slate-800"><i class="fa-solid fa-users text-emerald-700 mr-1"></i>Số người ăn:</span>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="changePeople(-1)" class="w-8 h-8 rounded-xl bg-white border border-emerald-400 font-extrabold text-slate-900 hover:bg-emerald-100">-</button>
+                                <span id="people-count" class="w-6 text-center font-extrabold text-base text-emerald-900">1</span>
+                                <button type="button" onclick="changePeople(1)" class="w-8 h-8 rounded-xl bg-white border border-emerald-400 font-extrabold text-slate-900 hover:bg-emerald-100">+</button>
+                            </div>
+                        </div>
+
+                        <button type="button" onclick="autoGenerateMenu()" class="px-4 py-2.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm shadow-sm flex items-center gap-2 transition">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i> Gợi ý thực đơn tự động
+                        </button>
+
+                        <button type="button" onclick="clearAllMeals()" class="px-3.5 py-2.5 rounded-2xl bg-rose-100 hover:bg-rose-200 text-rose-900 border border-rose-300 font-bold text-xs sm:text-sm transition">
+                            <i class="fa-solid fa-trash-can mr-1"></i> Xóa hết
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Progress Comparison Bars (Planned vs Target) -->
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-6">
+                    <div class="nv-subpanel p-3.5 rounded-2xl">
+                        <div class="flex justify-between text-xs font-bold mb-1">
+                            <span class="text-slate-700">Tổng Calo Thực Đơn (1 người)</span>
+                            <span id="prog-cal-text" class="text-emerald-900 font-extrabold">0 / 2449 kcal</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-white rounded-full overflow-hidden border border-emerald-300">
+                            <div id="prog-cal-bar" class="h-full bg-emerald-600 transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-100/70 p-3.5 rounded-2xl border border-amber-300">
+                        <div class="flex justify-between text-xs font-bold mb-1">
+                            <span class="text-amber-950">Tinh bột (Carbs)</span>
+                            <span id="prog-carb-text" class="text-amber-950 font-extrabold">0 / 306g</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-white rounded-full overflow-hidden border border-amber-300">
+                            <div id="prog-carb-bar" class="h-full bg-amber-500 transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-rose-100/70 p-3.5 rounded-2xl border border-rose-300">
+                        <div class="flex justify-between text-xs font-bold mb-1">
+                            <span class="text-rose-950">Chất đạm (Protein)</span>
+                            <span id="prog-pro-text" class="text-rose-950 font-extrabold">0 / 153g</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-white rounded-full overflow-hidden border border-rose-300">
+                            <div id="prog-pro-bar" class="h-full bg-rose-500 transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-indigo-100/70 p-3.5 rounded-2xl border border-indigo-300">
+                        <div class="flex justify-between text-xs font-bold mb-1">
+                            <span class="text-indigo-950">Chất béo (Fat)</span>
+                            <span id="prog-fat-text" class="text-indigo-950 font-extrabold">0 / 68g</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-white rounded-full overflow-hidden border border-indigo-300">
+                            <div id="prog-fat-bar" class="h-full bg-indigo-500 transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+                <!-- Left: Vietnamese Food Catalog (5 cols) -->
+                <div class="lg:col-span-5 nv-card rounded-3xl p-5 sm:p-6 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-extrabold text-base sm:text-lg text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-basket-shopping text-emerald-700"></i> Kho Thực Phẩm Thuần Việt
+                        </h3>
+                        <span class="text-xs font-bold text-emerald-800 bg-emerald-200/70 px-2.5 py-0.5 rounded-full" id="food-count-badge">24 món</span>
+                    </div>
+
+                    <!-- Meal Target Selector -->
+                    <div class="nv-subpanel p-3 rounded-2xl">
+                        <label class="block text-xs font-extrabold text-slate-800 uppercase mb-1.5">Đang chọn thêm món vào bữa:</label>
+                        <div class="grid grid-cols-4 gap-1.5">
+                            <button type="button" onclick="setActiveMealSlot('breakfast')" id="slot-btn-breakfast" class="py-2 rounded-xl text-xs font-extrabold bg-emerald-700 text-white shadow-sm">☀️ Sáng</button>
+                            <button type="button" onclick="setActiveMealSlot('lunch')" id="slot-btn-lunch" class="py-2 rounded-xl text-xs font-bold bg-white text-slate-800 hover:bg-emerald-100">🌤️ Trưa</button>
+                            <button type="button" onclick="setActiveMealSlot('dinner')" id="slot-btn-dinner" class="py-2 rounded-xl text-xs font-bold bg-white text-slate-800 hover:bg-emerald-100">🌙 Tối</button>
+                            <button type="button" onclick="setActiveMealSlot('snack')" id="slot-btn-snack" class="py-2 rounded-xl text-xs font-bold bg-white text-slate-800 hover:bg-emerald-100">🍎 Phụ</button>
+                        </div>
+                    </div>
+
+                    <!-- Search & Category Filter -->
+                    <div class="space-y-2.5">
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                            <input type="text" id="food-search" oninput="renderFoodDatabase()" placeholder="Tìm cơm, phở, ức gà, cá basa, rau muống..." class="nv-input w-full pl-9 pr-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold">
+                        </div>
+
+                        <div class="flex flex-wrap gap-1.5">
+                            <button type="button" onclick="setFoodFilter('all')" id="filter-all" class="px-3 py-1 rounded-lg text-xs font-extrabold bg-emerald-700 text-white">Tất cả</button>
+                            <button type="button" onclick="setFoodFilter('carb')" id="filter-carb" class="px-3 py-1 rounded-lg text-xs font-bold bg-amber-100 text-amber-950 border border-amber-300">🍚 Tinh bột</button>
+                            <button type="button" onclick="setFoodFilter('protein')" id="filter-protein" class="px-3 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-950 border border-rose-300">🥩 Đạm</button>
+                            <button type="button" onclick="setFoodFilter('veg')" id="filter-veg" class="px-3 py-1 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-950 border border-emerald-300">🥬 Rau & Quả</button>
+                            <button type="button" onclick="setFoodFilter('fat')" id="filter-fat" class="px-3 py-1 rounded-lg text-xs font-bold bg-indigo-100 text-indigo-950 border border-indigo-300">🥑 Béo tốt</button>
+                        </div>
+                    </div>
+
+                    <!-- Food Items List -->
+                    <div id="food-catalog-list" class="space-y-2 max-h-[460px] overflow-y-auto pr-1"></div>
+                </div>
+
+                <!-- Right: 4 Meal Slots + Family Grocery Summary (7 cols) -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div id="meals-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+
+                    <!-- Grocery Shopping List Card -->
+                    <div class="nv-card rounded-3xl p-5 sm:p-6 border-2 border-emerald-500">
+                        <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-emerald-200">
+                            <div>
+                                <h3 class="font-extrabold text-base sm:text-lg text-slate-900 flex items-center gap-2">
+                                    <i class="fa-solid fa-clipboard-list text-emerald-700"></i>
+                                    <span>Danh Sách Đi Chợ Tổng Hợp (<span id="grocery-people-label">1</span> người)</span>
+                                </h3>
+                                <p class="text-xs text-slate-600">Tự động cộng gộp khối lượng thực phẩm của cả ngày theo số người ăn</p>
+                            </div>
+                            <div class="flex items-center gap-2 no-print">
+                                <button type="button" onclick="copyGroceryList()" class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition">
+                                    <i class="fa-solid fa-copy"></i> Sao chép
+                                </button>
+                                <button type="button" onclick="window.print()" class="px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-50 text-slate-800 border border-emerald-400 text-xs font-bold flex items-center gap-1.5 transition">
+                                    <i class="fa-solid fa-print"></i> In thực đơn
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="grocery-list-content" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-4"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast-box" class="fixed bottom-5 right-5 z-50 hidden bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl border border-emerald-400 text-xs sm:text-sm font-bold flex items-center gap-2.5">
+        <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+        <span id="toast-message">Đã cập nhật!</span>
+    </div>
+
+    <script>
+        const VIETNAMESE_FOODS = [
+            // Tinh bột (Carbs)
+            { id: 'com_trang', name: 'Cơm trắng (Gạo tẻ)', category: 'carb', unit: '1 chén vừa (130g)', grams: 130, cal: 170, carb: 37, pro: 3.5, fat: 0.4, hand: '1.5 vốc tay' },
+            { id: 'com_gao_lut', name: 'Cơm gạo lứt', category: 'carb', unit: '1 chén vừa (130g)', grams: 130, cal: 150, carb: 32, pro: 3.8, fat: 1.2, hand: '1.5 vốc tay' },
+            { id: 'khoai_lang', name: 'Khoai lang mật/nhật luộc', category: 'carb', unit: '1 củ vừa (150g)', grams: 150, cal: 130, carb: 30, pro: 2.4, fat: 0.2, hand: '1.5 vốc tay' },
+            { id: 'bun_tuoi', name: 'Bún tươi / Bánh phở', category: 'carb', unit: '1 tô vừa (150g)', grams: 150, cal: 165, carb: 36, pro: 3.0, fat: 0.3, hand: '1.5 vốc tay' },
+            { id: 'xoi_dau_xanh', name: 'Xôi đậu xanh / Xôi mặn', category: 'carb', unit: '1 gói vừa (150g)', grams: 150, cal: 280, carb: 52, pro: 7.0, fat: 4.5, hand: '1.5 vốc tay' },
+            { id: 'banh_mi', name: 'Bánh mì Việt Nam (không nhân)', category: 'carb', unit: '1 ổ vừa (90g)', grams: 90, cal: 230, carb: 45, pro: 7.5, fat: 2.0, hand: '2 vốc tay' },
+            { id: 'ngo_luoc', name: 'Ngô (Bắp) nếp/ngọt luộc', category: 'carb', unit: '1 bắp vừa (160g)', grams: 160, cal: 145, carb: 31, pro: 4.2, fat: 1.5, hand: '1.5 vốc tay' },
+
+            // Chất đạm (Protein)
+            { id: 'uc_ga', name: 'Ức gà phi lê áp chảo/luộc', category: 'protein', unit: '100g chín', grams: 100, cal: 165, carb: 0, pro: 31, fat: 3.6, hand: '1 lòng bàn tay' },
+            { id: 'thit_bo', name: 'Thịt bò thăn xào/nhúng', category: 'protein', unit: '100g chín', grams: 100, cal: 215, carb: 0, pro: 26, fat: 12, hand: '1 lòng bàn tay' },
+            { id: 'thit_heo_nac', name: 'Thịt heo nạc vai luộc/rang', category: 'protein', unit: '100g chín', grams: 100, cal: 195, carb: 0, pro: 25, fat: 10, hand: '1 lòng bàn tay' },
+            { id: 'ca_basa', name: 'Cá basa / Cá lóc kho tộ', category: 'protein', unit: '1 khứa vừa (120g)', grams: 120, cal: 180, carb: 2, pro: 23, fat: 8.5, hand: '1.2 lòng bàn tay' },
+            { id: 'ca_hoi', name: 'Cá hồi áp chảo', category: 'protein', unit: '100g chín', grams: 100, cal: 208, carb: 0, pro: 22, fat: 13, hand: '1 lòng bàn tay' },
+            { id: 'tom_tuoi', name: 'Tôm sú / Tôm thẻ hấp', category: 'protein', unit: '100g bóc vỏ', grams: 100, cal: 99, carb: 0.2, pro: 24, fat: 0.3, hand: '1 lòng bàn tay' },
+            { id: 'trung_ga', name: 'Trứng gà luộc / ốp la', category: 'protein', unit: '2 quả (110g)', grams: 110, cal: 155, carb: 1.1, pro: 13, fat: 11, hand: '1 lòng bàn tay' },
+            { id: 'dau_hu', name: 'Đậu hũ trắng / sốt cà', category: 'protein', unit: '2 bìa (160g)', grams: 160, cal: 145, carb: 3.5, pro: 16, fat: 8, hand: '1.2 lòng bàn tay' },
+
+            // Rau xanh & Trái cây (Veg)
+            { id: 'rau_muong', name: 'Rau muống / Rau cải luộc', category: 'veg', unit: '1 đĩa vừa (150g)', grams: 150, cal: 38, carb: 6.5, pro: 3.2, fat: 0.3, hand: '1.5 nắm tay' },
+            { id: 'bong_cai', name: 'Bông cải xanh / Su su hấp', category: 'veg', unit: '1 đĩa vừa (150g)', grams: 150, cal: 50, carb: 10, pro: 4.0, fat: 0.5, hand: '1.5 nắm tay' },
+            { id: 'canh_bau', name: 'Canh bầu / Canh bí đỏ nấu tôm', category: 'veg', unit: '1 tô vừa (200g)', grams: 200, cal: 65, carb: 11, pro: 4.5, fat: 1.0, hand: '1.5 nắm tay' },
+            { id: 'chuoi_chin', name: 'Chuối sứ / Chuối già chín', category: 'veg', unit: '1 quả vừa (110g)', grams: 110, cal: 98, carb: 25, pro: 1.2, fat: 0.3, hand: '1 nắm tay' },
+            { id: 'oi_thanh_long', name: 'Ổi lê / Thanh long / Bưởi', category: 'veg', unit: '1 phần (150g)', grams: 150, cal: 85, carb: 20, pro: 1.8, fat: 0.4, hand: '1.5 nắm tay' },
+
+            // Chất béo tốt (Fat)
+            { id: 'bo_sap', name: 'Bơ sáp Đà Lạt', category: 'fat', unit: '1/2 quả (100g)', grams: 100, cal: 160, carb: 8.5, pro: 2.0, fat: 15, hand: '1.5 ngón cái' },
+            { id: 'dau_phong', name: 'Lạc (Đậu phộng) / Hạt điều rang', category: 'fat', unit: '1 nắm nhỏ (30g)', grams: 30, cal: 170, carb: 5.5, pro: 7.5, fat: 14, hand: '1.5 ngón cái' },
+            { id: 'dau_oli', name: 'Dầu ô liu / Dầu phộng nấu ăn', category: 'fat', unit: '1 muỗng canh (10g)', grams: 10, cal: 90, carb: 0, pro: 0, fat: 10, hand: '1 ngón cái' },
+            { id: 'sua_chua', name: 'Sữa chua ít đường', category: 'fat', unit: '1 hộp (100g)', grams: 100, cal: 85, carb: 11, pro: 3.8, fat: 2.8, hand: '1 ngón cái' }
+        ];
+
+        const state = {
+            theme: 'botanical',
+            gender: 'male',
+            age: 28,
+            height: 170,
+            weight: 65,
+            activity: 1.55,
+            goalOffset: 0,
+            carbPct: 50,
+            proPct: 25,
+            fatPct: 25,
+            targetCal: 2449,
+            targetCarbG: 306,
+            targetProG: 153,
+            targetFatG: 68,
+            mealsPerDay: 3,
+            peopleCount: 1,
+            activeMealSlot: 'breakfast',
+            foodFilter: 'all',
+            meals: {
+                breakfast: [],
+                lunch: [],
+                dinner: [],
+                snack: []
+            }
+        };
+
+        function setAppTheme(themeName) {
+            state.theme = themeName;
+            document.body.setAttribute('data-theme', themeName);
+            const map = {
+                botanical: { label: '🌿 Thảo mộc', active: 'bg-emerald-700 text-white font-bold shadow-sm' },
+                warm: { label: '🌾 Kem ấm', active: 'bg-amber-600 text-white font-bold shadow-sm' },
+                slate: { label: '💎 Xanh lam', active: 'bg-sky-700 text-white font-bold shadow-sm' }
+            };
+            ['botanical', 'warm', 'slate'].forEach(t => {
+                const btn = document.getElementById(`theme-btn-${t}`);
+                if (!btn) return;
+                if (t === themeName) {
+                    btn.className = `px-2.5 py-1 rounded-lg text-xs transition ${map[t].active}`;
+                } else {
+                    btn.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-700 hover:bg-emerald-200/50 transition';
+                }
+            });
+        }
+
+        function setGender(gender) {
+            state.gender = gender;
+            const maleBtn = document.getElementById('btn-gender-male');
+            const femaleBtn = document.getElementById('btn-gender-female');
+            if (gender === 'male') {
+                maleBtn.className = 'py-3 px-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 border-2 border-emerald-600 bg-emerald-600 text-white shadow-sm transition';
+                femaleBtn.className = 'py-3 px-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 border-2 border-emerald-300 bg-white text-slate-700 hover:bg-emerald-50 transition';
+            } else {
+                femaleBtn.className = 'py-3 px-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 border-2 border-emerald-600 bg-emerald-600 text-white shadow-sm transition';
+                maleBtn.className = 'py-3 px-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 border-2 border-emerald-300 bg-white text-slate-700 hover:bg-emerald-50 transition';
+            }
+            handleMetricChange();
+        }
+
+        function handleMetricChange() {
+            const age = Math.max(10, Math.min(100, parseFloat(document.getElementById('input-age').value) || 28));
+            const height = Math.max(100, Math.min(230, parseFloat(document.getElementById('input-height').value) || 170));
+            const weight = Math.max(25, Math.min(200, parseFloat(document.getElementById('input-weight').value) || 65));
+            const activity = parseFloat(document.getElementById('select-activity').value) || 1.55;
+            const goalOffset = parseInt(document.getElementById('select-goal').value, 10) || 0;
+
+            state.age = age;
+            state.height = height;
+            state.weight = weight;
+            state.activity = activity;
+            state.goalOffset = goalOffset;
+
+            // Mifflin-St Jeor Equation
+            const baseBmr = (10 * weight) + (6.25 * height) - (5 * age) + (state.gender === 'male' ? 5 : -161);
+            const bmr = Math.round(baseBmr);
+            const tdee = Math.round(bmr * activity);
+            const targetCal = Math.max(1100, tdee + goalOffset);
+            const waterMl = Math.round(weight * 35);
+
+            state.targetCal = targetCal;
+
+            // BMI Asian Standard
+            const heightM = height / 100;
+            const bmi = (weight / (heightM * heightM)).toFixed(1);
+            const minIdeal = (18.5 * heightM * heightM).toFixed(1);
+            const maxIdeal = (22.9 * heightM * heightM).toFixed(1);
+
+            document.getElementById('bmi-value').textContent = bmi;
+            document.getElementById('bmi-IdealText').textContent = `Cân nặng chuẩn châu Á: ${minIdeal} kg – ${maxIdeal} kg`;
+
+            const badge = document.getElementById('bmi-badge');
+            if (bmi < 18.5) {
+                badge.textContent = 'Thiếu cân';
+                badge.className = 'text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-amber-500 text-white';
+            } else if (bmi <= 22.9) {
+                badge.textContent = 'Bình thường (Chuẩn)';
+                badge.className = 'text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-600 text-white';
+            } else if (bmi <= 24.9) {
+                badge.textContent = 'Thừa cân nhẹ';
+                badge.className = 'text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-orange-500 text-white';
+            } else {
+                badge.textContent = 'Béo phì';
+                badge.className = 'text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-rose-600 text-white';
+            }
+
+            // Goal Badge
+            const goalBadge = document.getElementById('goal-status-badge');
+            if (goalOffset < 0) {
+                goalBadge.textContent = `Giảm cân (${goalOffset} kcal)`;
+                goalBadge.className = 'text-xs font-extrabold px-3 py-1 rounded-full bg-amber-600 text-white';
+            } else if (goalOffset > 0) {
+                goalBadge.textContent = `Tăng cơ (+${goalOffset} kcal)`;
+                goalBadge.className = 'text-xs font-extrabold px-3 py-1 rounded-full bg-indigo-600 text-white';
+            } else {
+                goalBadge.textContent = 'Giữ cân cân bằng';
+                goalBadge.className = 'text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-700 text-white';
+            }
+
+            document.getElementById('res-bmr').textContent = bmr.toLocaleString('vi-VN');
+            document.getElementById('res-tdee').textContent = tdee.toLocaleString('vi-VN');
+            document.getElementById('res-water').textContent = waterMl.toLocaleString('vi-VN');
+            document.getElementById('res-target-cal').textContent = targetCal.toLocaleString('vi-VN');
+
+            const fiberMin = Math.round((targetCal / 1000) * 12);
+            const fiberMax = Math.round((targetCal / 1000) * 15);
+            document.getElementById('res-fiber').textContent = `${fiberMin} - ${fiberMax}g`;
+
+            updateMacroCalculations();
+        }
+
+        function applyPreset(presetName) {
+            const presets = {
+                balanced: { c: 50, p: 25, f: 25 },
+                highprotein: { c: 40, p: 35, f: 25 },
+                lowcarb: { c: 25, p: 40, f: 35 },
+                keto: { c: 10, p: 25, f: 65 }
+            };
+            const p = presets[presetName];
+            if (!p) return;
+
+            state.carbPct = p.c;
+            state.proPct = p.p;
+            state.fatPct = p.f;
+
+            ['balanced', 'highprotein', 'lowcarb', 'keto'].forEach(k => {
+                const btn = document.getElementById(`preset-${k}`);
+                if (!btn) return;
+                if (k === presetName) {
+                    btn.className = 'py-2.5 px-3 rounded-xl text-xs font-bold border-2 border-emerald-600 bg-emerald-600 text-white shadow-sm transition';
+                } else {
+                    btn.className = 'py-2.5 px-3 rounded-xl text-xs font-bold border border-emerald-300 bg-white text-slate-800 hover:bg-emerald-50 transition';
+                }
+            });
+
+            syncSlidersUI();
+            updateMacroCalculations();
+        }
+
+        function adjustMacros(changedKey, rawValue) {
+            let val = parseInt(rawValue, 10) || 10;
+            val = Math.max(5, Math.min(80, val));
+            const remainder = 100 - val;
+
+            if (changedKey === 'carb') {
+                state.carbPct = val;
+                const otherSum = state.proPct + state.fatPct;
+                if (otherSum === 0) {
+                    state.proPct = Math.round(remainder / 2);
+                } else {
+                    state.proPct = Math.max(5, Math.round((state.proPct / otherSum) * remainder));
+                }
+                state.fatPct = 100 - state.carbPct - state.proPct;
+            } else if (changedKey === 'pro') {
+                state.proPct = val;
+                const otherSum = state.carbPct + state.fatPct;
+                if (otherSum === 0) {
+                    state.carbPct = Math.round(remainder / 2);
+                } else {
+                    state.carbPct = Math.max(5, Math.round((state.carbPct / otherSum) * remainder));
+                }
+                state.fatPct = 100 - state.proPct - state.carbPct;
+            } else {
+                state.fatPct = val;
+                const otherSum = state.carbPct + state.proPct;
+                if (otherSum === 0) {
+                    state.carbPct = Math.round(remainder / 2);
+                } else {
+                    state.carbPct = Math.max(5, Math.round((state.carbPct / otherSum) * remainder));
+                }
+                state.proPct = 100 - state.fatPct - state.carbPct;
+            }
+
+            syncSlidersUI();
+            updateMacroCalculations();
+        }
+
+        function syncSlidersUI() {
+            document.getElementById('slider-carb').value = state.carbPct;
+            document.getElementById('slider-pro').value = state.proPct;
+            document.getElementById('slider-fat').value = state.fatPct;
+
+            document.getElementById('label-carb-pct').textContent = state.carbPct;
+            document.getElementById('label-pro-pct').textContent = state.proPct;
+            document.getElementById('label-fat-pct').textContent = state.fatPct;
+        }
+
+        function updateMacroCalculations() {
+            const carbKcal = Math.round((state.targetCal * state.carbPct) / 100);
+            const proKcal = Math.round((state.targetCal * state.proPct) / 100);
+            const fatKcal = Math.round((state.targetCal * state.fatPct) / 100);
+
+            const carbG = Math.round(carbKcal / 4);
+            const proG = Math.round(proKcal / 4);
+            const fatG = Math.round(fatKcal / 9);
+
+            state.targetCarbG = carbG;
+            state.targetProG = proG;
+            state.targetFatG = fatG;
+
+            document.getElementById('label-carb-g').textContent = carbG;
+            document.getElementById('label-pro-g').textContent = proG;
+            document.getElementById('label-fat-g').textContent = fatG;
+
+            document.getElementById('card-carb-g').textContent = `${carbG}g`;
+            document.getElementById('card-carb-kcal').textContent = `${carbKcal.toLocaleString('vi-VN')} kcal (${state.carbPct}%)`;
+
+            document.getElementById('card-pro-g').textContent = `${proG}g`;
+            document.getElementById('card-pro-kcal').textContent = `${proKcal.toLocaleString('vi-VN')} kcal (${state.proPct}%)`;
+
+            document.getElementById('card-fat-g').textContent = `${fatG}g`;
+            document.getElementById('card-fat-kcal').textContent = `${fatKcal.toLocaleString('vi-VN')} kcal (${state.fatPct}%)`;
+
+            // Update SVG Donut
+            document.getElementById('donut-carb').setAttribute('stroke-dasharray', `${state.carbPct} ${100 - state.carbPct}`);
+            document.getElementById('donut-carb').setAttribute('stroke-dashoffset', '0');
+
+            document.getElementById('donut-pro').setAttribute('stroke-dasharray', `${state.proPct} ${100 - state.proPct}`);
+            document.getElementById('donut-pro').setAttribute('stroke-dashoffset', `-${state.carbPct}`);
+
+            document.getElementById('donut-fat').setAttribute('stroke-dasharray', `${state.fatPct} ${100 - state.fatPct}`);
+            document.getElementById('donut-fat').setAttribute('stroke-dashoffset', `-${state.carbPct + state.proPct}`);
+
+            updateHandGuideUI();
+            updateMealProgressUI();
+        }
+
+        function setMealsPerDay(num) {
+            state.mealsPerDay = num;
+            [3, 4, 5].forEach(n => {
+                const btn = document.getElementById(`btn-meals-${n}`);
+                if (n === num) {
+                    btn.className = 'px-3 py-1.5 rounded-xl text-xs font-extrabold bg-amber-600 text-white shadow-sm';
+                } else {
+                    btn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold text-amber-950 hover:bg-amber-200';
+                }
+            });
+            updateHandGuideUI();
+        }
+
+        function updateHandGuideUI() {
+            const meals = state.mealsPerDay;
+            const palmsPerMeal = (state.targetProG / 24 / meals).toFixed(1);
+            const cupsPerMeal = (state.targetCarbG / 25 / meals).toFixed(1);
+            const fistsPerMeal = (5 / meals).toFixed(1);
+            const thumbsPerMeal = (state.targetFatG / 10 / meals).toFixed(1);
+
+            document.getElementById('hand-pro-meal').textContent = `${palmsPerMeal} lòng bàn tay`;
+            document.getElementById('hand-carb-meal').textContent = `${cupsPerMeal} vốc tay`;
+            document.getElementById('hand-veg-meal').textContent = `${fistsPerMeal} nắm tay`;
+            document.getElementById('hand-fat-meal').textContent = `${thumbsPerMeal} ngón cái`;
+        }
+
+        function setActiveMealSlot(slot) {
+            state.activeMealSlot = slot;
+            const labels = { breakfast: '☀️ Sáng', lunch: '🌤️ Trưa', dinner: '🌙 Tối', snack: '🍎 Phụ' };
+            Object.keys(labels).forEach(k => {
+                const btn = document.getElementById(`slot-btn-${k}`);
+                if (k === slot) {
+                    btn.className = 'py-2 rounded-xl text-xs font-extrabold bg-emerald-700 text-white shadow-sm';
+                } else {
+                    btn.className = 'py-2 rounded-xl text-xs font-bold bg-white text-slate-800 hover:bg-emerald-100';
+                }
+            });
+            renderMeals();
+        }
+
+        function setFoodFilter(cat) {
+            state.foodFilter = cat;
+            const cats = ['all', 'carb', 'protein', 'veg', 'fat'];
+            cats.forEach(c => {
+                const btn = document.getElementById(`filter-${c}`);
+                if (c === cat) {
+                    btn.className = 'px-3 py-1 rounded-lg text-xs font-extrabold bg-emerald-700 text-white';
+                } else {
+                    btn.className = 'px-3 py-1 rounded-lg text-xs font-bold bg-white text-slate-800 border border-emerald-300 hover:bg-emerald-50';
+                }
+            });
+            renderFoodDatabase();
+        }
+
+        function renderFoodDatabase() {
+            const query = (document.getElementById('food-search').value || '').toLowerCase().trim();
+            const listEl = document.getElementById('food-catalog-list');
+
+            const filtered = VIETNAMESE_FOODS.filter(item => {
+                const matchCat = state.foodFilter === 'all' || item.category === state.foodFilter;
+                const matchText = item.name.toLowerCase().includes(query) || item.unit.toLowerCase().includes(query);
+                return matchCat && matchText;
+            });
+
+            document.getElementById('food-count-badge').textContent = `${filtered.length} món`;
+
+            const badgeColors = {
+                carb: 'bg-amber-100 text-amber-950 border-amber-300',
+                protein: 'bg-rose-100 text-rose-950 border-rose-300',
+                veg: 'bg-emerald-100 text-emerald-950 border-emerald-300',
+                fat: 'bg-indigo-100 text-indigo-950 border-indigo-300'
+            };
+
+            listEl.innerHTML = filtered.map(food => `
+                <div class="p-3 rounded-2xl bg-white border border-emerald-200 hover:border-emerald-500 flex items-center justify-between gap-2 transition">
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="font-extrabold text-xs sm:text-sm text-slate-900">${food.name}</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeColors[food.category]}">${food.cal} kcal</span>
+                        </div>
+                        <div class="text-[11px] text-slate-600 font-medium mt-0.5">
+                            ${food.unit} • Đạm: <b>${food.pro}g</b> | Bột: <b>${food.carb}g</b> | Béo: <b>${food.fat}g</b>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addFoodToSlot('${food.id}')" class="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold shrink-0 shadow-sm transition">
+                        + Thêm
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function addFoodToSlot(foodId, slotOverride = null, qtyOverride = 1) {
+            const slot = slotOverride || state.activeMealSlot;
+            const existing = state.meals[slot].find(i => i.foodId === foodId);
+            if (existing) {
+                existing.qty = Math.round((existing.qty + qtyOverride) * 10) / 10;
+            } else {
+                state.meals[slot].push({ foodId, qty: qtyOverride });
+            }
+            if (!slotOverride) {
+                const food = VIETNAMESE_FOODS.find(f => f.id === foodId);
+                showToast(`Đã thêm "${food.name}" vào bữa!`);
+            }
+            renderMeals();
+        }
+
+        function updateMealItemQty(slot, foodId, delta) {
+            const item = state.meals[slot].find(i => i.foodId === foodId);
+            if (!item) return;
+            item.qty = Math.round((item.qty + delta) * 10) / 10;
+            if (item.qty <= 0) {
+                state.meals[slot] = state.meals[slot].filter(i => i.foodId !== foodId);
+            }
+            renderMeals();
+        }
+
+        function changePeople(delta) {
+            state.peopleCount = Math.max(1, Math.min(10, state.peopleCount + delta));
+            document.getElementById('people-count').textContent = state.peopleCount;
+            document.getElementById('grocery-people-label').textContent = state.peopleCount;
+            renderMeals();
+        }
+
+        function clearAllMeals() {
+            state.meals = { breakfast: [], lunch: [], dinner: [], snack: [] };
+            renderMeals();
+            showToast('Đã xóa toàn bộ thực đơn!');
+        }
+
+        function autoGenerateMenu() {
+            state.meals = { breakfast: [], lunch: [], dinner: [], snack: [] };
+            const scale = Math.max(0.6, Math.min(1.8, state.targetCal / 2000));
+            const r = (v) => Math.max(0.5, Math.round(v * 2) / 2);
+
+            // Bữa sáng thuần Việt
+            addFoodToSlot('xoi_dau_xanh', 'breakfast', r(1 * scale));
+            addFoodToSlot('trung_ga', 'breakfast', r(1 * scale));
+            addFoodToSlot('chuoi_chin', 'breakfast', 1);
+
+            // Bữa trưa cơm nhà
+            addFoodToSlot('com_trang', 'lunch', r(1.5 * scale));
+            addFoodToSlot('uc_ga', 'lunch', r(1.2 * scale));
+            addFoodToSlot('rau_muong', 'lunch', 1);
+            addFoodToSlot('dau_oli', 'lunch', 1);
+
+            // Bữa tối ấm cúng
+            addFoodToSlot('com_gao_lut', 'dinner', r(1.2 * scale));
+            addFoodToSlot('ca_basa', 'dinner', r(1.2 * scale));
+            addFoodToSlot('canh_bau', 'dinner', 1);
+
+            // Bữa phụ chiều
+            addFoodToSlot('sua_chua', 'snack', 1);
+            addFoodToSlot('dau_phong', 'snack', r(1 * scale));
+
+            renderMeals();
+            showToast('Đã tạo thực đơn thuần Việt khớp mục tiêu của bạn!');
+        }
+
+        function renderMeals() {
+            const slotMeta = [
+                { key: 'breakfast', title: '☀️ Bữa Sáng', desc: 'Nạp năng lượng đầu ngày' },
+                { key: 'lunch', title: '🌤️ Bữa Trưa', desc: 'Bữa chính giàu dinh dưỡng' },
+                { key: 'dinner', title: '🌙 Bữa Tối', desc: 'Thanh đạm, dễ tiêu hóa' },
+                { key: 'snack', title: '🍎 Bữa Phụ', desc: 'Trái cây & hạt dinh dưỡng' }
+            ];
+
+            const container = document.getElementById('meals-container');
+            container.innerHTML = slotMeta.map(meta => {
+                const items = state.meals[meta.key];
+                const isSelected = state.activeMealSlot === meta.key;
+                let slotCal = 0;
+
+                const rowsHtml = items.map(entry => {
+                    const food = VIETNAMESE_FOODS.find(f => f.id === entry.foodId);
+                    if (!food) return '';
+                    const itemCal = Math.round(food.cal * entry.qty);
+                    slotCal += itemCal;
+                    const scaledGrams = Math.round(food.grams * entry.qty * state.peopleCount);
+
+                    return `
+                        <div class="p-2.5 rounded-xl bg-white border border-emerald-200 flex items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <div class="font-bold text-xs text-slate-900 truncate">${food.name}</div>
+                                <div class="text-[11px] text-slate-600">
+                                    <b>${entry.qty}</b> phần (${scaledGrams}g cho ${state.peopleCount} người) • <b class="text-emerald-800">${itemCal} kcal</b>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 shrink-0 no-print">
+                                <button type="button" onclick="updateMealItemQty('${meta.key}', '${food.id}', -0.5)" class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-800 font-bold text-xs">-</button>
+                                <span class="text-xs font-extrabold w-6 text-center">${entry.qty}</span>
+                                <button type="button" onclick="updateMealItemQty('${meta.key}', '${food.id}', 0.5)" class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-800 font-bold text-xs">+</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div onclick="setActiveMealSlot('${meta.key}')" class="nv-card rounded-2xl p-4 cursor-pointer transition ${isSelected ? 'ring-2 ring-emerald-600' : ''}">
+                        <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-emerald-200">
+                            <div>
+                                <h4 class="font-extrabold text-sm text-slate-900">${meta.title}</h4>
+                                <p class="text-[11px] text-slate-600">${meta.desc}</p>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full bg-emerald-700 text-white text-xs font-extrabold">${slotCal} kcal</span>
+                        </div>
+                        <div class="space-y-2 min-h-[90px]">
+                            ${rowsHtml || `<div class="text-xs text-slate-500 italic py-6 text-center">Chưa có món ăn. Nhấn "+ Thêm" ở danh sách bên trái.</div>`}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            updateMealProgressUI();
+            renderGroceryList();
+        }
+
+        function updateMealProgressUI() {
+            let totalCal = 0, totalCarb = 0, totalPro = 0, totalFat = 0;
+
+            Object.values(state.meals).forEach(list => {
+                list.forEach(entry => {
+                    const food = VIETNAMESE_FOODS.find(f => f.id === entry.foodId);
+                    if (!food) return;
+                    totalCal += food.cal * entry.qty;
+                    totalCarb += food.carb * entry.qty;
+                    totalPro += food.pro * entry.qty;
+                    totalFat += food.fat * entry.qty;
+                });
+            });
+
+            totalCal = Math.round(totalCal);
+            totalCarb = Math.round(totalCarb);
+            totalPro = Math.round(totalPro);
+            totalFat = Math.round(totalFat);
+
+            document.getElementById('nav-meal-cal').textContent = totalCal;
+
+            document.getElementById('prog-cal-text').textContent = `${totalCal} / ${state.targetCal} kcal`;
+            document.getElementById('prog-carb-text').textContent = `${totalCarb} / ${state.targetCarbG}g`;
+            document.getElementById('prog-pro-text').textContent = `${totalPro} / ${state.targetProG}g`;
+            document.getElementById('prog-fat-text').textContent = `${totalFat} / ${state.targetFatG}g`;
+
+            document.getElementById('prog-cal-bar').style.width = `${Math.min(100, Math.round((totalCal / state.targetCal) * 100))}%`;
+            document.getElementById('prog-carb-bar').style.width = `${Math.min(100, Math.round((totalCarb / state.targetCarbG) * 100))}%`;
+            document.getElementById('prog-pro-bar').style.width = `${Math.min(100, Math.round((totalPro / state.targetProG) * 100))}%`;
+            document.getElementById('prog-fat-bar').style.width = `${Math.min(100, Math.round((totalFat / state.targetFatG) * 100))}%`;
+        }
+
+        function renderGroceryList() {
+            const map = {};
+            Object.values(state.meals).forEach(list => {
+                list.forEach(entry => {
+                    if (!map[entry.foodId]) map[entry.foodId] = 0;
+                    map[entry.foodId] += entry.qty;
+                });
+            });
+
+            const groceryEl = document.getElementById('grocery-list-content');
+            const keys = Object.keys(map);
+
+            if (keys.length === 0) {
+                groceryEl.innerHTML = `<div class="col-span-2 text-xs text-slate-600 italic py-4 text-center">Hãy thêm món ăn hoặc bấm "Gợi ý thực đơn tự động" để xem tổng khối lượng cần đi chợ.</div>`;
+                return;
+            }
+
+            groceryEl.innerHTML = keys.map(foodId => {
+                const food = VIETNAMESE_FOODS.find(f => f.id === foodId);
+                const totalPortions = Math.round(map[foodId] * state.peopleCount * 10) / 10;
+                const totalGrams = Math.round(food.grams * totalPortions);
+                return `
+                    <div class="p-3 rounded-xl bg-white border border-emerald-300 flex items-center justify-between">
+                        <div>
+                            <div class="font-extrabold text-xs sm:text-sm text-slate-900">${food.name}</div>
+                            <div class="text-[11px] text-slate-600">${totalPortions} phần (${food.unit})</div>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-950 font-extrabold text-xs border border-emerald-300">
+                            ${totalGrams.toLocaleString('vi-VN')}g
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function copyGroceryList() {
+            const map = {};
+            Object.values(state.meals).forEach(list => {
+                list.forEach(entry => {
+                    if (!map[entry.foodId]) map[entry.foodId] = 0;
+                    map[entry.foodId] += entry.qty;
+                });
+            });
+
+            const keys = Object.keys(map);
+            if (keys.length === 0) {
+                showToast('Chưa có món ăn nào trong thực đơn!');
+                return;
+            }
+
+            let text = `DANH SÁCH ĐI CHỢ NUTRIVIET PRO (${state.peopleCount} NGƯỜI)\n`;
+            text += `Mục tiêu: ${state.targetCal} kcal/người/ngày\n----------------------------\n`;
+            keys.forEach(id => {
+                const food = VIETNAMESE_FOODS.find(f => f.id === id);
+                const totalPortions = Math.round(map[id] * state.peopleCount * 10) / 10;
+                const totalGrams = Math.round(food.grams * totalPortions);
+                text += `- ${food.name}: ${totalGrams}g (${totalPortions} phần)\n`;
+            });
+
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            showToast('Đã sao chép danh sách đi chợ vào bộ nhớ tạm!');
+        }
+
+        function showToast(msg) {
+            const box = document.getElementById('toast-box');
+            document.getElementById('toast-message').textContent = msg;
+            box.classList.remove('hidden');
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => {
+                box.classList.add('hidden');
+            }, 2600);
+        }
+
+        window.onload = function () {
+            handleMetricChange();
+            renderFoodDatabase();
+            autoGenerateMenu();
+        };
+    </script>
+</body>
+</html>
